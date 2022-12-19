@@ -38,10 +38,13 @@ def text_test(message):
         request = f"SELECT * FROM other_faults"
         cur.execute(request)
         for j in cur.fetchall():
-            text = f'❌ FAULT:\nServer: <b>{j["name"]}</b>, fault: <b>{j["fault_name"]}</b>'
+            text = f'❌ FAULT:\nServer: <b>{j["name"]}</b>\nfault: <b>{j["fault_name"]}</b>'
             bot.send_message(message.from_user.id, text, parse_mode='html')
             #bot.send_message(message.from_user.id, (f'Server: {j["name"]}, fault: {j["fault_name"]}'))
         connection.commit()
+    else:
+        print(message.text)
+        bot.send_message(message.chat_id, message.text, parse_mode='html')
 #✅ FIXED\n
 
 
