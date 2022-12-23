@@ -13,6 +13,7 @@ keyButton = types.ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
 faults_button = types.KeyboardButton(text='Faults')
 status_button = types.KeyboardButton(text='Server Status')
 
+
 keyButton.add(faults_button, status_button)
 
 server_data = []  # реальные имена и данные серверов и устройств
