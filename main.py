@@ -15,16 +15,35 @@ status_button = types.KeyboardButton(text='Server Status')
 
 keyButton.add(faults_button, status_button)
 
+server_data = []  # реальные имена и данные серверов и устройств
+
 
 def start():
-     bot.send_message(chat_id=chat_id, text='Hello', reply_markup=keyButton)
+    bot.send_message(chat_id=chat_id, text='Bot Started', reply_markup=keyButton)
+    """MySQL Connection Block"""  # Выгружаем в словарь реальные имена и данные серверов и устройств
+    connection = pymysql.connect(  # Коннектимся к базе MySQL
+        host=config('ip_mysql', default=''),
+        user=config("SQL_usrID", default=''),
+        password=config('SQL_password', default=''),
+        db=config('SQL_DB', default=''),
+        charset='utf8mb4',
+        #        cursorclass=DictCursor  # Курсор будет возвращать значения в виде словарей
+    )
+    cur = connection.cursor()  # Создаём курсор SQL
+    sql_request = "SELECT * FROM real_name"
+    cur.execute(sql_request)
+    for i in (cur.fetchall()):  # Создаём список картежей с данными серверов и сетевых устройств
+        server_data.append(i)
+    connection.close()
 
-start()
+start()  # Функция выполняет действия необходимые только при запуске/перезапуске бота
+
+
+# @bot.message_handler(commands=['text'])
 
 @bot.message_handler(content_types=['text'])
 def text_test(message):
-    #bot.send_message(message.chat.id, "Test button", reply_markup=keyButton)
-    if message.text == 'Faults':
+    if message.text == 'Faults':    # Выгружаем активные ошибки, если они имеются
         """MySQL Connection Block"""
         connection = pymysql.connect(  # Коннектимся к базе MySQL
             host=config('ip_mysql', default=''),
@@ -37,20 +56,25 @@ def text_test(message):
         cur = connection.cursor()  # Создаём курсор SQL
         request = f"SELECT * FROM other_faults"
         cur.execute(request)
-        for j in cur.fetchall():
-            text = f'❌ FAULT:\nServer: <b>{j["name"]}</b>\nfault: <b>{j["fault_name"]}</b>'
+        if len(cur.fetchall()) > 0:
+            for j in cur.fetchall():
+                for l in server_data:
+                    if j["name"] in l:
+                        text = f'❌ FAULT:\nServer: <b>{l[2]}</b> (IP {l[3]})\nFAULT: <b>{j["fault_name"]}</b>'
+                        bot.send_message(message.from_user.id, text, parse_mode='html')
+            connection.close()
+        else:
+            text = '✅ <b>NO FAULTS DETECTED</b>'
             bot.send_message(message.from_user.id, text, parse_mode='html')
-            #bot.send_message(message.from_user.id, (f'Server: {j["name"]}, fault: {j["fault_name"]}'))
-        connection.commit()
     else:
-        print(message.text)
-        bot.send_message(message.chat_id, message.text, parse_mode='html')
-#✅ FIXED\n
+        text = 'Нет такой команды'
+        bot.send_message(message.from_user.id, text, parse_mode='html')
+
+# ✅ FIXED\n
 
 
 # @bot.message_handler(commands=['faults'])  # формирует список активных ошибок и базы данных
 # def fault_list(message):
-
 
 
 # @bot.message_handler(content_types=['text'])
